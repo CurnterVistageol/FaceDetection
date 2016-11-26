@@ -57,10 +57,10 @@ feature_params = struct('template_size', 36, 'hog_cell_size', 6);
 
 %% Step 1. Load positive training crops and random negative examples
 %YOU CODE 'get_positive_features' and 'get_random_negative_features'
-
+    
 features_pos = get_positive_features( train_path_pos, feature_params );
 
-num_negative_examples = 10000; %Higher will work strictly better, but you should start with 10000 for debugging
+num_negative_examples = 300000; %Higher swill work strictly better, but you should start with 10000 for debugging
 features_neg = get_random_negative_features( non_face_scn_path, feature_params, num_negative_examples);
 
     
@@ -73,8 +73,22 @@ features_neg = get_random_negative_features( non_face_scn_path, feature_params, 
 % work best e.g. 0.0001, but you can try other values
 
 %YOU CODE classifier training. Make sure the outputs are 'w' and 'b'.
-w = rand((feature_params.template_size / feature_params.hog_cell_size)^2 * 36,1); %placeholder, delete
-b = rand(1); %placeholder, delete
+
+%w = rand((feature_params.template_size / feature_params.hog_cell_size)^2 * 36,1); %placeholder, delete
+%b = rand(1); %placeholder, delete
+
+X = [features_pos; features_neg];
+X = X.';
+
+[posN, ~] = size(features_pos);
+[negN, ~] = size(features_neg);
+y1 = ones(posN,1);
+y2 = ones(negN,1)*(-1);
+Y = [y1;y2];
+
+lambda = 0.0001; % Regularization parameter
+
+[w,b] = vl_svmtrain(X, Y, lambda);
 
 %% step 3. Examine learned classifier
 % You don't need to modify anything in this section. The section first
@@ -143,10 +157,10 @@ imwrite(hog_template_image, 'visualizations/hog_template.png')
 [gt_ids, gt_bboxes, gt_isclaimed, tp, fp, duplicate_detections] = ...
     evaluate_detections(bboxes, confidences, image_ids, label_path);
 
-visualize_detections_by_image(bboxes, confidences, image_ids, tp, fp, test_scn_path, label_path)
-% visualize_detections_by_image_no_gt(bboxes, confidences, image_ids, test_scn_path)
+%visualize_detections_by_image(bboxes, confidences, image_ids, tp, fp, test_scn_path, label_path)
+ visualize_detections_by_image_no_gt(bboxes, confidences, image_ids, test_scn_path)
 
-% visualize_detections_by_confidence(bboxes, confidences, image_ids, test_scn_path, label_path);
+ %visualize_detections_by_confidence(bboxes, confidences, image_ids, test_scn_path, label_path);
 
 % performance to aim for
 % random (stater code) 0.001 AP
